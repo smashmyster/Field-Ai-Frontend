@@ -6,7 +6,12 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "pm2:start": "pm2 start ecosystem.config.js",
+    "pm2:stop": "pm2 stop voice-frontend",
+    "pm2:restart": "pm2 restart voice-frontend",
+    "pm2:delete": "pm2 delete voice-frontend",
+    "pm2:logs": "pm2 logs voice-frontend"
   },
   "dependencies": {
     "@elevenlabs/react": "^0.12.3",
