@@ -16,7 +16,7 @@ export default function VoiceChat() {
   useEffect(() => {
     console.log("useEffect");
     // Connect to NestJS socket
-     const socket = io("http://localhost:4000", {
+     const socket = io("https://api-field-voice.balanceapp.co.za", {
         transports: ["websocket"],          // 🚨 MUST HAVE
         upgrade: false,                     // avoid polling upgrade
         path: "/socket.io/",                // explicit Socket.IO path

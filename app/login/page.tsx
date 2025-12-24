@@ -60,7 +60,7 @@ export default function LoginPage() {
         login(data.access_token, data.user);
         
         console.log('Redirecting to dashboard...');
-        router.push('/dashboard');
+        router.push('/');
       } else {
         console.log('Login failed:', data);
         setError((data as any).message || 'An error occurred');
