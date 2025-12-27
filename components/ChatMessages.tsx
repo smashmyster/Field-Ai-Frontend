@@ -1,7 +1,7 @@
-import { Message, FileAttachment } from '@/types';
-import { useState } from 'react';
+import { Message } from '@/types';
+import { useEffect, useRef } from 'react';
 import Markdown from './Markdown';
-import { FileText, Volume2, Download, ExternalLink, Paperclip } from 'lucide-react';
+import { FileText, Volume2, Download } from 'lucide-react';
 import Image from 'next/image';
 
 interface ChatMessagesProps {
@@ -11,6 +11,8 @@ interface ChatMessagesProps {
 }
 
 export const ChatMessages = ({ messages, thinkingProcess, onShowSources }: ChatMessagesProps) => {
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
+
   const formatFileSize = (bytes: number): string => {
     if (bytes === 0) return '0 Bytes';
     const k = 1024;
@@ -26,8 +28,21 @@ export const ChatMessages = ({ messages, thinkingProcess, onShowSources }: ChatM
     if (mimeType.includes('word') || mimeType.includes('document')) return FileText;
     return FileText;
   };
+
+  // Scroll to bottom when messages or thinking process change
+  useEffect(() => {
+    if (messagesContainerRef.current && (messages.length > 0 || thinkingProcess.length > 0)) {
+      // Use setTimeout to ensure DOM has updated
+      setTimeout(() => {
+        if (messagesContainerRef.current) {
+          messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
+        }
+      }, 100);
+    }
+  }, [messages, thinkingProcess]);
+
   return (
-    <div className="w-full max-h-[70vh] overflow-y-auto">
+    <div ref={messagesContainerRef} className="w-full max-h-[70vh] overflow-y-auto">
       {messages.length > 0 && (
         <div className="max-w-4xl mx-auto space-y-12">
           {messages.map((message, messageIndex) => {
