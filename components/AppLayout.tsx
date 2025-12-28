@@ -7,7 +7,6 @@ import { useAuth } from "@/context/AuthContext";
 
 const tabs = [
   { id: "chat", label: "Chat", icon: <PhoneCall size={18} />, href: "/chat" },
-  { id: "settings", label: "Settings", icon: <Settings size={18} />, href: "/settings" },
 ];
 
 interface AppLayoutProps {
