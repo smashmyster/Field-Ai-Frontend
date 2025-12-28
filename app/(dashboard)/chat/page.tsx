@@ -256,13 +256,14 @@ export default function ChatPage() {
           isBusy={isSearching}
           attachedFiles={[]}
           isUploading={false}
-          onRemoveFile={() => {}}
-          onClearAllFiles={() => {}}
+          onRemoveFile={() => { } }
+          onClearAllFiles={() => { } }
           selectedTool={selectedTool}
           onToolSelected={setSelectedTool}
           isRecordingDisabled={isAudioPlaying || isSearching}
-          onImageSelect={handleImageUpload}
-        />
+          onImageSelect={handleImageUpload} isVoiceMode={false} setIsVoiceMode={function (isVoiceMode: boolean): void {
+            throw new Error('Function not implemented.');
+          } }        />
       </div>
     </DragDropWrapper>
   );
