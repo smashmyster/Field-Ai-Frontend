@@ -17,7 +17,7 @@ export const useSearch = () => {
   const [thinkingProcess, setThinkingProcess] = useState<string[]>([]);
   
   const {socket} = useSocket();
-  const searchDocs = async (query: string, conversationId?: string, artifactId?: string) => {
+  const searchDocs = async (query: string, conversationId?: string, artifactId?: string, isVoiceMode?: boolean) => {
     if (!query.trim()) return;
 
     setIsSearching(true);
@@ -50,7 +50,8 @@ export const useSearch = () => {
       const result = await apiClient.post('/agent/plan', {
         message: query,
         conversationId: conversationId,
-        artifactId: artifactId
+        artifactId: artifactId,
+        isVoiceMode: isVoiceMode
       });
 
       console.log('Search results:', result);

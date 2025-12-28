@@ -1,15 +1,14 @@
-import { Plus, Send, X, Sparkles, Box, Play, Loader2 } from 'lucide-react';
+import { Plus, Send, X, Sparkles, Loader2 } from 'lucide-react';
 import { FileUpload } from './FileUpload';
 import { ToolsMenu } from './ToolsMenu';
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { ITool, MessageAttachment } from '@/types';
-import { useSocket } from '@/context/SocketContext';
 import { useConversation } from "@elevenlabs/react";
 
 interface InputBarProps {
   text: string;
   setText: (text: string) => void;
-  onSend: (tool?: ITool | null, query?: string) => void;
+  onSend: (tool?: ITool | null, query?: string, isVoiceMode?: boolean) => void;
   isBusy: boolean;
   attachedFiles: MessageAttachment[];
   isUploading: boolean;
@@ -19,6 +18,8 @@ interface InputBarProps {
   onToolSelected?: (tool: ITool | null) => void;
   isRecordingDisabled?: boolean;
   onImageSelect?: (file: File) => void;
+  isVoiceMode: boolean;
+  setIsVoiceMode: (isVoiceMode: boolean) => void;
 }
 
 export const InputBar = ({
@@ -34,6 +35,8 @@ export const InputBar = ({
   onToolSelected,
   isRecordingDisabled = false,
   onImageSelect,
+  isVoiceMode,
+  setIsVoiceMode,
 }: InputBarProps) => {
   const [toolBarOpen, setToolBarOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -43,7 +46,6 @@ export const InputBar = ({
 
   const [partial, setPartial] = useState("");
   const [finalText, setFinalText] = useState("");
-  const [aiResponse, setAiResponse] = useState("");
   const [isInitializing, setIsInitializing] = useState(false);
   const transcriptRef = useRef<string>("");
   const [isRecording, setIsRecording] = useState(false);
@@ -56,27 +58,18 @@ export const InputBar = ({
   const micAnimRef = useRef<number | null>(null);
   const aiAnimRef = useRef<number | null>(null);
   const micStreamRef = useRef<MediaStream | null>(null);
+  const isVoiceModeRef = useRef<boolean>(false);
 
-
-  const [finalTranscript, setFinalTranscript] = useState("");
-  const vadHistory = useRef<number[]>([]);
-  const PAUSE_THRESHOLD = 0.15; // adjust based on noise floor
-  const PAUSE_WINDOW = 5; // number of VAD events to check
-
-
-
-
-
-  // AI response visualizer
-  const responseCtxRef = useRef<AudioContext | null>(null);
-  const responseAnalyserRef = useRef<AnalyserNode | null>(null);
-  const responseDataRef = useRef<Uint8Array | null>(null);
-  const lastFinalTranscript = useRef("");
-  const vadScores = useRef<number[]>([]);
   const lastTranscript = useRef("");
 
   const { startSession, endSession } = useConversation({
     onMessage: ({ message, source }) => {
+      // Only process messages if we're in voice mode
+      if (!isVoiceModeRef.current) {
+        console.log("Ignoring message: not in voice mode");
+        return;
+      }
+
       console.log("message", message, source);
       if (message?.trim()) {
         if (source === "user") {
@@ -84,12 +77,18 @@ export const InputBar = ({
 
           setText(message);
 
-          onSend(selectedTool, message);
+          // Pass isVoiceMode=true when sending from voice input
+          onSend(selectedTool, message, true);
         }
       }
     },
 
     onVadScore: ({ vadScore }) => {
+      // Only process VAD scores if we're in voice mode
+      if (!isVoiceModeRef.current) {
+        return;
+      }
+
       if (vadScore < 0.15 && lastTranscript.current) {
         console.log("🛑 Pause detected");
         console.log("📄 Transcript:", lastTranscript.current);
@@ -120,7 +119,8 @@ export const InputBar = ({
       e.preventDefault();
       const hasText = Boolean(text.trim());
       if ((hasText || selectedTool) && !isBusy) {
-        onSend(selectedTool);
+        // Manual text input - pass isVoiceMode=false
+        onSend(selectedTool, undefined, false);
       }
     }
   };
@@ -162,24 +162,52 @@ export const InputBar = ({
       return;
     }
 
+    // Don't start if already in voice mode
+    if (isVoiceModeRef.current) {
+      console.log("Already in voice mode, skipping start");
+      return;
+    }
+
+    // Set voice mode synchronously using ref BEFORE any async operations
+    isVoiceModeRef.current = true;
+    setIsVoiceMode(true);
+
     // Reset transcript state when starting new recording
     setPartial("");
     setFinalText("");
     transcriptRef.current = "";
-
-    console.log("start-audio");
+  
+    console.log("start-audio - voice mode set to true");
     setIsInitializing(true);
+    
+    // Now initiate session - isVoiceModeRef is already true
     startSession({
       agentId: "agent_8901kd5e9aatfzhs7xb68kdp3n3p",
       connectionType: "webrtc",
     }).then((sessionId) => {
       console.log("sessionId", sessionId);
+      // Verify we're still in voice mode before proceeding
+      if (!isVoiceModeRef.current) {
+        console.log("Voice mode was disabled during session start, aborting");
+        endSession();
+        return;
+      }
       setIsInitializing(false);
       setIsRecording(true);
       handleStartRecording();
+    }).catch((error) => {
+      console.error("Failed to start session:", error);
+      // Reset voice mode on error
+      isVoiceModeRef.current = false;
+      setIsVoiceMode(false);
+      setIsInitializing(false);
     });
   }
   function handleEndRecording() {
+    // Set voice mode to false synchronously
+    isVoiceModeRef.current = false;
+    setIsVoiceMode(false);
+    
     setIsRecording(false);
     endSession();
     setIsInitializing(false);
@@ -223,9 +251,6 @@ export const InputBar = ({
 
 
     micSourceRef.current.connect(workletNode);
-  }
-  function startRecording() {
-    console.log("start-recording");
   }
 
 
@@ -362,16 +387,21 @@ export const InputBar = ({
                     // Send the transcript when recording
                     const transcript = transcriptRef.current || (finalText + " " + partial).trim() || partial.trim();
                     if (transcript) {
-                      onSend(selectedTool, transcript.trim());
+                      // Pass isVoiceMode=true when sending from voice recording
+                      onSend(selectedTool, transcript.trim(), true);
+                      // Reset voice mode synchronously
+                      isVoiceModeRef.current = false;
+                      setIsVoiceMode(false);
                       endSession();
                       // Reset transcript state after sending
                       setPartial("");
                       setFinalText("");
                       transcriptRef.current = "";
                     }
-                  } else if (text.trim() || selectedTool) {
+                  } else if (text.trim()) {
                     // Send text message when there's text or a tool selected
-                    onSend(selectedTool);
+                    // Pass isVoiceMode=false for manually typed messages
+                    onSend(selectedTool, undefined, false);
                   } else {
                     // Start voice recording when no text
                     startAudio();

@@ -114,15 +114,15 @@ export default function ChatPage() {
     };
   }, []);
   // Handle search with text input
-  const handleSend = async (tool?: ITool | null, query?: string) => {
+  const handleSend = async (tool?: ITool | null, query?: string, isVoiceModeParam?: boolean) => {
     const trimmed = query && query.trim() != "" ? query : text.trim();
     
-    // If query is provided (from voice), enable voice mode
-    // If text is typed manually, disable voice mode
-    if (query) {
-      setIsVoiceMode(true);
-    } else if (text.trim()) {
-      setIsVoiceMode(false);
+    // Use the passed isVoiceMode parameter, or fall back to state
+    const shouldUseVoiceMode = isVoiceModeParam !== undefined ? isVoiceModeParam : isVoiceMode;
+    
+    // Update state if parameter was provided
+    if (isVoiceModeParam !== undefined) {
+      setIsVoiceMode(isVoiceModeParam);
     }
 
     if (tool) {
@@ -235,7 +235,7 @@ export default function ChatPage() {
       setText('');
 
       try {
-        const response: any = await searchDocs(trimmed, conversationId, artifactId);
+        const response: any = await searchDocs(trimmed, conversationId, artifactId, shouldUseVoiceMode);
         console.log("response", response);
         if (response) {
           const responseMessage: Message = {
@@ -246,10 +246,12 @@ export default function ChatPage() {
             createdAt: new Date(),
             audioPath: response.audioPath,
           };
+          console.log("response.audioPath", response.audioPath);
           if (response.audioPath) {
             responseMessage.audioPath = response.audioPath;
             // Only auto-play audio if in voice mode
-            if (isVoiceMode) {
+            console.log("shouldUseVoiceMode", shouldUseVoiceMode);
+            if (shouldUseVoiceMode) {
               const audio = new Audio(response.audioPath);
               audio.volume = 1.0;
               
@@ -430,6 +432,8 @@ export default function ChatPage() {
             onToolSelected={setSelectedTool}
             isRecordingDisabled={isAudioPlaying || isSearching}
             onImageSelect={handleImageUpload}
+            isVoiceMode={isVoiceMode}
+            setIsVoiceMode={setIsVoiceMode}
           />
         </div>
 
