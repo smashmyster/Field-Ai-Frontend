@@ -1,10 +1,28 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Voice AI Frontend (Next.js)
+
+A Next.js frontend application for a voice AI system with real-time chat, voice interaction, and file upload capabilities.
+
+## Prerequisites
+
+- Node.js (v18 or higher)
+- Backend server running (see backend README)
+- npm, yarn, pnpm, or bun package manager
 
 ## Getting Started
 
-### Environment Variables
+### 1. Install Dependencies
 
-Create a `.env.local` file in the root directory with the following:
+```bash
+npm install
+# or
+yarn install
+# or
+pnpm install
+```
+
+### 2. Environment Variables
+
+Create a `.env.local` file in the root directory:
 
 ```env
 NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=your_google_maps_api_key_here
@@ -20,11 +38,9 @@ NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=your_google_maps_api_key_here
 5. Copy the API key and add it to your `.env.local` file
 6. (Optional) Restrict the API key to your domain for security
 
-**Note:** Restart your development server after adding the environment variable.
+**Note:** The frontend connects to the backend at `http://localhost:4000` by default. If your backend runs on a different URL, update the `API_BASE_URL` in `types/contstants.ts`.
 
-### Running the Development Server
-
-First, run the development server:
+### 3. Start the Development Server
 
 ```bash
 npm run dev
@@ -36,23 +52,77 @@ pnpm dev
 bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) in your browser to see the application.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### 4. Production Build
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm run build
+npm run start
+# or
+yarn build
+yarn start
+```
+
+## Test Credentials
+
+Use the following credentials to log in to the application:
+
+- **Email:** `dyorajackson@gmail.com`
+- **Password:** `123456`
+
+## Features
+
+- **Real-time Chat**: WebSocket-based chat interface
+- **Voice Interaction**: Voice input and output capabilities
+- **File Upload**: Upload and manage documents
+- **Authentication**: Secure login and session management
+- **Conversation History**: View and manage past conversations
+
+## Project Structure
+
+```
+app/
+├── (dashboard)/      # Protected dashboard routes
+│   ├── chat/         # Chat interface
+│   ├── history/      # Conversation history
+│   ├── settings/     # User settings
+│   └── policies/     # Policies page
+├── login/            # Login page
+└── layout.tsx        # Root layout
+
+components/
+├── VoiceChat.tsx     # Voice chat component
+├── ChatMessages.tsx  # Chat messages display
+├── FileUpload.tsx    # File upload component
+└── ...               # Other components
+
+context/
+├── AuthContext.tsx   # Authentication context
+└── SocketContext.tsx # WebSocket context
+```
+
+## Available Scripts
+
+- `npm run dev` - Start development server
+- `npm run build` - Build for production
+- `npm run start` - Start production server
+- `npm run lint` - Run ESLint
+- `npm run pm2:start` - Start with PM2
+- `npm run pm2:stop` - Stop PM2 process
+- `npm run pm2:logs` - View PM2 logs
+
+## Backend Connection
+
+The frontend connects to the backend API at `http://localhost:4000`. Make sure the backend server is running before starting the frontend.
+
+## Troubleshooting
+
+- **Connection Issues**: Ensure the backend server is running on port 4000
+- **Authentication Errors**: Verify your credentials and check backend authentication endpoints
+- **WebSocket Issues**: Check that the backend WebSocket gateway is properly configured
 
 ## Learn More
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- [Next.js Documentation](https://nextjs.org/docs)
+- [React Documentation](https://react.dev)
